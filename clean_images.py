@@ -1,17 +1,23 @@
 import os
-from PIL import Image
+import warnings
+from PIL import Image, UnidentifiedImageError
 
-def verify_and_remove_corrupt_images(directory):
-    for root, dirs, files in os.walk(directory):
+def delete_corrupt_images(directory):
+    for root, _, files in os.walk(directory):
         for file in files:
+            file_path = os.path.join(root, file)
             try:
-                file_path = os.path.join(root, file)
-                img = Image.open(file_path)
-                img.verify()  # Verifica que el archivo se puede abrir y no está corrupto
-            except (IOError, SyntaxError, Image.DecompressionBombError, Image.UnidentifiedImageError) as e:
-                print(f"Imagen corrupta detectada y eliminada: {file_path} - Error: {e}")
+                with warnings.catch_warnings():
+                    warnings.simplefilter("error", UserWarning)
+                    with Image.open(file_path) as img:
+                        img.verify()  # Verifica si la imagen está corrupta
+            except (IOError, SyntaxError, UnidentifiedImageError, UserWarning) as e:
+                print(f'Eliminando imagen corrupta: {file_path}')
                 os.remove(file_path)
 
-# Verificar y limpiar las imágenes en los directorios de train y test
-verify_and_remove_corrupt_images('dataset/train')
-verify_and_remove_corrupt_images('dataset/test')
+# Directorios de entrenamiento y prueba
+train_directory = 'dataset/train'
+test_directory = 'dataset/test'
+
+delete_corrupt_images(train_directory)
+delete_corrupt_images(test_directory)

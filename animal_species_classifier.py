@@ -2,6 +2,7 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.callbacks import EarlyStopping
 import json
 
 # Configuración de los generadores de datos con aumentación
@@ -71,13 +72,17 @@ model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accur
 steps_per_epoch = training_set.samples // training_set.batch_size
 validation_steps = test_set.samples // test_set.batch_size
 
-# Entrenamiento del modelo
+# Configurar Early Stopping
+early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+
+# Entrenamiento del modelo con Early Stopping
 model.fit(
     train_dataset,
     steps_per_epoch=steps_per_epoch,
-    epochs=100,
+    epochs=300,
     validation_data=val_dataset,
-    validation_steps=validation_steps
+    validation_steps=validation_steps,
+    callbacks=[early_stopping]
 )
 
 # Evaluación del modelo
